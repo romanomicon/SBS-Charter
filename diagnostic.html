@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Storage Diagnostic</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h2 {
+      margin-top: 0;
+      color: #333;
+    }
+    pre {
+      background: #f8f8f8;
+      padding: 15px;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-size: 12px;
+    }
+    .status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-left: 10px;
+    }
+    .status.good { background: #d4edda; color: #155724; }
+    .status.bad { background: #f8d7da; color: #721c24; }
+    .status.warning { background: #fff3cd; color: #856404; }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .danger {
+      background: #dc3545;
+    }
+    .danger:hover {
+      background: #c82333;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background: #f8f9fa;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 Storage Diagnostic Tool</h1>
+  <p>This tool helps diagnose localStorage issues and shows what data is currently stored.</p>
+
+  <!-- Storage Status -->
+  <div class="card">
+    <h2>Storage Status</h2>
+    <div id="storageStatus"></div>
+  </div>
+
+  <!-- All Books -->
+  <div class="card">
+    <h2>All Books in Storage</h2>
+    <div id="allBooks"></div>
+  </div>
+
+  <!-- Theme Settings -->
+  <div class="card">
+    <h2>Theme Settings</h2>
+    <div id="themeInfo"></div>
+  </div>
+
+  <!-- Raw Data -->
+  <div class="card">
+    <h2>Raw localStorage Data</h2>
+    <button onclick="showRawData()">Show All Raw Data</button>
+    <button onclick="exportData()" style="background: #28a745">Export Data</button>
+    <button onclick="clearAllData()" class="danger">Clear All Data</button>
+    <pre id="rawData" style="display: none;"></pre>
+  </div>
+
+  <!-- Import Section -->
+  <div class="card">
+    <h2>Import Data</h2>
+    <input type="file" id="importFile" accept=".json">
+    <button onclick="importData()">Import</button>
+  </div>
+
+  <script>
+    // Check storage availability
+    function checkStorage() {
+      const statusDiv = document.getElementById('storageStatus');
+      let html = '<table>';
+      
+      try {
+        localStorage.setItem('test', 'test');
+        localStorage.removeItem('test');
+        html += '<tr><td><strong>localStorage Available</strong></td><td><span class="status good">✓ YES</span></td></tr>';
+      } catch (e) {
+        html += '<tr><td><strong>localStorage Available</strong></td><td><span class="status bad">✗ NO</span></td></tr>';
+        html += `<tr><td colspan="2">Error: ${e.message}</td></tr>`;
+      }
+
+      // Count items
+      const itemCount = localStorage.length;
+      html += `<tr><td><strong>Total Items</strong></td><td>${itemCount}</td></tr>`;
+
+      // Calculate size
+      let totalSize = 0;
+      for (let key in localStorage) {
+        if (localStorage.hasOwnProperty(key)) {
+          totalSize += localStorage[key].length + key.length;
+        }
+      }
+      html += `<tr><td><strong>Approximate Size</strong></td><td>${(totalSize / 1024).toFixed(2)} KB</td></tr>`;
+      
+      html += '</table>';
+      statusDiv.innerHTML = html;
+    }
+
+    // Show all books
+    function showAllBooks() {
+      const booksDiv = document.getElementById('allBooks');
+      let html = '';
+      let bookCount = 0;
+
+      // Look for different possible storage keys
+      const possibleKeys = [
+        'books',
+        'savedBooks',
+        'bibleBooks',
+        'userBooks'
+      ];
+
+      let booksFound = false;
+
+      for (let key of possibleKeys) {
+        const data = localStorage.getItem(key);
+        if (data) {
+          booksFound = true;
+          try {
+            const books = JSON.parse(data);
+            html += `<h3>Key: "${key}" <span class="status good">${Array.isArray(books) ? books.length : Object.keys(books).length} books</span></h3>`;
+            html += '<table>';
+            html += '<tr><th>Book</th><th>Status</th><th>Data</th></tr>';
+            
+            if (Array.isArray(books)) {
+              books.forEach(book => {
+                html += `<tr>
+                  <td>${book.name || book.title || 'Unknown'}</td>
+                  <td><span class="status ${book.saved ? 'good' : 'warning'}">${book.saved ? 'Saved' : 'New'}</span></td>
+                  <td><button onclick='showBookData(${JSON.stringify(book).replace(/'/g, "\\'")})''>View</button></td>
+                </tr>`;
+              });
+            } else {
+              for (let bookId in books) {
+                const book = books[bookId];
+                html += `<tr>
+                  <td>${book.name || book.title || bookId}</td>
+                  <td><span class="status ${book.saved ? 'good' : 'warning'}">${book.saved ? 'Saved' : 'New'}</span></td>
+                  <td><button onclick='showBookData(${JSON.stringify(book).replace(/'/g, "\\'")})''>View</button></td>
+                </tr>`;
+              }
+            }
+            html += '</table>';
+          } catch (e) {
+            html += `<p class="status bad">Error parsing ${key}: ${e.message}</p>`;
+          }
+        }
+      }
+
+      // Check for individual book entries (pattern: book_*)
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith('book_') || key.startsWith('Bible_')) {
+          booksFound = true;
+          const data = localStorage.getItem(key);
+          try {
+            const book = JSON.parse(data);
+            if (!html.includes('Individual Book Entries')) {
+              html += '<h3>Individual Book Entries</h3><table>';
+              html += '<tr><th>Key</th><th>Book</th><th>Data</th></tr>';
+            }
+            html += `<tr>
+              <td><code>${key}</code></td>
+              <td>${book.name || book.title || 'Unknown'}</td>
+              <td><button onclick='showBookData(${JSON.stringify(book).replace(/'/g, "\\'")})''>View</button></td>
+            </tr>`;
+          } catch (e) {
+            html += `<tr><td colspan="3" class="status bad">Error parsing ${key}</td></tr>`;
+          }
+        }
+      }
+      
+      if (html.includes('Individual Book Entries')) {
+        html += '</table>';
+      }
+
+      if (!booksFound) {
+        html = '<p class="status warning">⚠️ No books found in localStorage</p>';
+        html += '<p>Try saving a book first, then refresh this page.</p>';
+      }
+
+      booksDiv.innerHTML = html;
+    }
+
+    // Show theme info
+    function showThemeInfo() {
+      const themeDiv = document.getElementById('themeInfo');
+      const themeKeys = ['themePreset', 'userPreset', 'theme', 'customColors'];
+      let html = '<table>';
+      
+      themeKeys.forEach(key => {
+        const value = localStorage.getItem(key);
+        if (value) {
+          html += `<tr><td><strong>${key}</strong></td><td><code>${value}</code></td></tr>`;
+        }
+      });
+      
+      html += '</table>';
+      themeDiv.innerHTML = html || '<p>No theme settings found</p>';
+    }
+
+    // Show book data in alert
+    function showBookData(book) {
+      alert(JSON.stringify(book, null, 2));
+    }
+
+    // Show raw data
+    function showRawData() {
+      const pre = document.getElementById('rawData');
+      const allData = {};
+      
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        try {
+          allData[key] = JSON.parse(localStorage.getItem(key));
+        } catch (e) {
+          allData[key] = localStorage.getItem(key);
+        }
+      }
+      
+      pre.textContent = JSON.stringify(allData, null, 2);
+      pre.style.display = 'block';
+    }
+
+    // Export data
+    function exportData() {
+      const allData = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        allData[key] = localStorage.getItem(key);
+      }
+      
+      const dataStr = JSON.stringify(allData, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `localStorage-backup-${new Date().toISOString().split('T')[0]}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Import data
+    function importData() {
+      const file = document.getElementById('importFile').files[0];
+      if (!file) {
+        alert('Please select a file first');
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          for (let key in data) {
+            localStorage.setItem(key, data[key]);
+          }
+          alert('Data imported successfully!');
+          location.reload();
+        } catch (error) {
+          alert('Error importing data: ' + error.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // Clear all data
+    function clearAllData() {
+      if (confirm('Are you sure? This will delete ALL localStorage data!')) {
+        if (confirm('Really sure? This cannot be undone!')) {
+          localStorage.clear();
+          alert('All data cleared');
+          location.reload();
+        }
+      }
+    }
+
+    // Run diagnostics on load
+    checkStorage();
+    showAllBooks();
+    showThemeInfo();
+  </script>
+</body>
+</html>
