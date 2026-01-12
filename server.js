@@ -4,12 +4,12 @@ const app = express();
 
 app.use(express.json());
 
-// Serve static files from root, js/, css/ folders
-app.use(express.static(path.join(__dirname, "..")));      // root html files
-app.use("/js", express.static(path.join(__dirname, "..", "js")));
-app.use("/css", express.static(path.join(__dirname, "..", "css")));
+// Serve HTML, CSS, JS
+app.use(express.static(__dirname));
+app.use("/js", express.static(path.join(__dirname, "js")));
+app.use("/css", express.static(path.join(__dirname, "css")));
 
-// Example route to test backend
+// Test route
 app.get("/api/test", (req, res) => {
   res.json({ message: "Backend is working!" });
 });
