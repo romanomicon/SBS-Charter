@@ -1,0 +1,25 @@
+{
+  "name": "sbs-charter",
+  "version": "1.0.0",
+  "description": "",
+  "main": "wordExport.js",
+  "scripts": {
+  "start": "node server.js",
+  "test": "echo \"Error: no test specified\" && exit 1"
+},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/romanomicon/SBS-Charter.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/romanomicon/SBS-Charter/issues"
+  },
+  "homepage": "https://github.com/romanomicon/SBS-Charter#readme",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
