@@ -316,3 +316,51 @@ textarea:focus {
 .mt-1 { margin-top: 0.5rem; }
 .mt-2 { margin-top: 1rem; }
 .mt-3 { margin-top: 1.5rem; }
+
+/* ================================
+   Shared Book Components
+   ================================ */
+
+/* Books Grid - shared across home and library pages */
+.books-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+/* Base Book Tile Styles */
+.book-tile {
+  background: var(--bg-surface);
+  border-radius: var(--radius-large);
+  padding: 1rem;
+  box-shadow: var(--shadow-soft);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  border: 1px solid var(--border-primary);
+}
+
+.book-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
+}
+
+.book-tile h4 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Responsive Grid */
+@media (max-width: 768px) {
+  .books-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .books-grid {
+    grid-template-columns: 1fr;
+  }
+}

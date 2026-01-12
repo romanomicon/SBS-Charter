@@ -1,5 +1,5 @@
 /* ================================
-   Library Page
+   Library Page Specific Styles
    ================================ */
 
 #book-library {
@@ -8,34 +8,9 @@
   padding: 0 1.25rem;
 }
 
-.books-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 1rem;
-}
-
-/* Book tile with delete button */
+/* Library-specific: position relative for delete button */
 .book-tile {
   position: relative;
-  background: var(--bg-surface);
-  border-radius: var(--radius-large);
-  padding: 16px;
-  box-shadow: var(--shadow-soft);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-  cursor: pointer;
-  border: 1px solid var(--border-primary);
-}
-
-.book-tile:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-medium);
-}
-
-.book-tile h4 {
-  margin: 0 0 8px;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-primary);
 }
 
 /* Delete book button */
@@ -133,21 +108,4 @@
   background: var(--toast-progress);
   width: 100%;
   transition: width 1s linear;
-}
-
-/* ================================
-   Responsive Grid
-   ================================ */
-
-@media (max-width: 768px) {
-  .books-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 0.75rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .books-grid {
-    grid-template-columns: 1fr;
-  }
 }
